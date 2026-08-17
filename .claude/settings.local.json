@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:rerait.telangana.gov.in)",
+      "Bash(curl -sS -L -o rera.html -w \"HTTP:%{http_code} FINAL:%{url_effective} TYPE:%{content_type} SIZE:%{size_download}\\\\n\" \"https://rerait.telangana.gov.in/SearchList/Search\")",
+      "Bash(timeout 20 openssl s_client -connect rerait.telangana.gov.in:443 -servername rerait.telangana.gov.in)",
+      "Bash(curl -sSk -L -o rera.html -w \"HTTP:%{http_code} SIZE:%{size_download} TYPE:%{content_type}\\\\n\" \"https://rerait.telangana.gov.in/SearchList/Search\")",
+      "Bash(python3 -)",
+      "Bash(curl -sSk -X POST \"https://rerait.telangana.gov.in/SearchList/GetTaluka\" -H \"Content-Type: application/json\" -H \"X-Requested-With: XMLHttpRequest\" -d '{\"ID\":\"25\"}' -w \"\\\\n[HTTP:%{http_code}]\\\\n\")",
+      "Bash(curl -sSk -X POST \"https://rerait.telangana.gov.in/SearchList/GetTaluka\" -H \"Content-Type: application/json\" -H \"X-Requested-With: XMLHttpRequest\" -d '{\"DisID\":25}' -w \"\\\\n[HTTP:%{http_code}]\\\\n\")",
+      "Bash(curl -sSk -D hdr.txt -o /dev/null \"https://rerait.telangana.gov.in/SearchList/Search\")",
+      "Bash(curl -sSk \"https://rerait.telangana.gov.in/\" -o home.html -w \"[home HTTP:%{http_code}]\\\\n\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import requests,bs4;print\\('requests',requests.__version__,'bs4',bs4.__version__\\)\")",
+      "Bash(mkdir -p tsrera/certs)",
+      "Bash(openssl x509 *)",
+      "Bash(curl -sS --cacert tsrera/certs/bundle.pem \"https://rerait.telangana.gov.in/SearchList/Search\" -o /dev/null -w \"VERIFIED OK HTTP:%{http_code}\\\\n\")",
+      "Bash(python3 *)"
+    ]
+  }
+}
