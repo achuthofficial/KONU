@@ -129,7 +129,7 @@ def match_listings_to_rera(
         if progress_every and (i + 1) % progress_every == 0:
             print(f"  ...{i+1:,}/{len(listings):,} rows resolved")
 
-    match_df = pd.DataFrame(records)
+    match_df = pd.DataFrame(records, index=listings.index)
     for src_col, dst_col in RERA_COLS_TO_ATTACH.items():
         vals = rera[src_col] if src_col in rera.columns else pd.Series(index=rera.index, dtype=object)
         listings[dst_col] = match_df["rera_idx"].map(vals)
