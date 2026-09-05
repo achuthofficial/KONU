@@ -24,8 +24,13 @@ def _style_sheet(ws, df: pd.DataFrame) -> None:
         cell.alignment = Alignment(horizontal="center")
     ws.freeze_panes = "A2"
     for i, col in enumerate(df.columns, start=1):
-        width = min(max(len(str(col)), df[col].astype(str).str.len().head(200).max() if len(df) else 10) + 2, 40)
+        max_len = df[col].astype(str).str.len().head(200).max() if len(df) else 10
+        width = min(max(len(str(col)), max_len) + 2, 40)
         ws.column_dimensions[get_column_letter(i)].width = width
+        if max_len > 60 and len(df) <= 50:
+            for row_idx, cell in enumerate(ws[get_column_letter(i)][1:], start=2):
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+                ws.row_dimensions[row_idx].height = max(ws.row_dimensions[row_idx].height or 0, 60)
 
 
 def write_report_workbook(path: Path, sheets: dict[str, pd.DataFrame], overview_stats: dict) -> None:
