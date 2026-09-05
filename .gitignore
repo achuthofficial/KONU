@@ -1,0 +1,5 @@
+# Scraper output (see tsrera/README.md)
+/tsrera/data/
+
+# Downloaded/converted datasets for analysis -- large, sourced from Drive, not tracked
+/tsrera/data_analysis/raw/
