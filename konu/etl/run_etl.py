@@ -64,6 +64,15 @@ METHODOLOGY = [
                             "society, no coordinates and no locality with any observed pincode "
                             "-- there is no signal there to impute from, so they are left null "
                             "rather than filled with a guess."),
+    ("Boundary polygons", "Official India Post pincode polygons (data/reference/*.geojson) are "
+                           "used for district, candidate pincodes and a cross-check -- NOT to fill "
+                           "Pincode. Point-in-polygon scores only 41% here because the listings' "
+                           "coordinates are locality centroids: 84,393 rows carry 8,353 distinct "
+                           "points, and where 5+ pincode-bearing rows share a point, 54% disagree "
+                           "on the pincode (up to 70 distinct pincodes at one coordinate). "
+                           "district_from_geo covers 88.2% of rows and agrees with RERA's district "
+                           "80.1% of the time; Possible_Pincodes lists the 3 nearest zones (the "
+                           "true pincode is among them 62% of the time)."),
     ("Latitude/Longitude", "Filled from the locality's own centroid, then the pincode centroid "
                             "(6.3% of rows). Imputed before nothing else depends on them: the "
                             "pincode KNN is trained only on observed coordinates."),

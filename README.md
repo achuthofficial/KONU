@@ -20,11 +20,12 @@ konu/                     analysis package
 └── matching/
     └── entity_match.py   fuzzy listing <-> RERA project resolution
 
-notebooks/                01 EDA · 02 merge · 03 modeling dataset · 04 in-depth EDA · 05 preprocessing
+notebooks/                01 EDA · 02 merge · 03 modeling dataset · 04 in-depth EDA · 05 preprocessing · 06 pincode matching
 tsrera/                   TS RERA scraper (see tsrera/README.md)
 data/raw/                 source datasets (gitignored)
 data/processed/           pipeline outputs (gitignored)
 data/reports/             Excel workbook (gitignored)
+data/reference/           pincode boundary GeoJSON, tracked (see its README for provenance)
 ```
 
 ## Running
@@ -67,6 +68,7 @@ Candidates were measured against held-out observed pincodes:
 
 | method | accuracy | coverage |
 |---|---|---|
+| pincode boundary polygons | 41.4% | 93% |
 | locality mode | 54.5% | 98% |
 | spatial KNN (lat/long) | 67.6% | — |
 | society mode | 70.6% | 88% |
@@ -76,6 +78,25 @@ Result: 95.1% of rows carry a pincode. Roughly 1 in 3 imputed values is wrong, s
 `Pincode_was_missing` and `Pincode_impute_source` travel with the data — use it as a coarse
 geographic feature, not a verified address. The remaining 4.9% have no society, no
 coordinates and no known locality, and are left null rather than guessed.
+
+**Why the boundary polygons don't fill pincode.** Point-in-polygon against official India
+Post boundaries (`data/reference/*.geojson`) is the methodologically right approach and would
+normally beat every statistical method — but it scores worst here, because the *coordinates*
+can't support it. 84,393 rows carry only 8,353 distinct coordinates (9.9%); one point repeats
+6,472 times. Where five or more pincode-bearing rows share a coordinate, 54% disagree on the
+pincode, with up to 70 distinct pincodes at a single point. The coordinates are locality
+centroids, not property locations, so a containment test returns one pincode for an area that
+genuinely spans many. Appending polygons to the chain left accuracy unchanged (68.3%); putting
+them ahead of the KNN made it worse (66.7%).
+
+**What the polygons do give us**, since districts are far coarser than pincodes and survive
+centroid-level coordinates:
+
+| column | what | quality |
+|---|---|---|
+| `district_from_geo` | district containing the coordinate | 88.2% coverage, 80.1% agreement with RERA's district |
+| `Possible_Pincodes` | 3 nearest pincode zones, nearest first | true pincode is among them 62% of the time |
+| `pincode_matches_polygon` | does the imputed pincode agree with the containing polygon | independent confidence flag |
 
 **RERA fields are never imputed.** `rera_promoter_name`, `rera_approved_date` and friends are
 only populated where a listing actually matched a project. Filling them would fabricate a

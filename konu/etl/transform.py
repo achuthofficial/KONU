@@ -6,6 +6,7 @@ import pandas as pd
 
 from ..matching.entity_match import match_listings_to_rera
 from .clean import collapse_to_top_n, derive_deal_type, winsorize_by_group
+from .geo import attach_geo_columns
 from .impute import (bucketed_median_impute, group_median_impute, impute_by_time_group,
                       impute_geo, impute_pincode)
 
@@ -21,6 +22,7 @@ MATERIAL_PRICE_COLS = ["Cement_Price_Rs_per_bag_50kg", "Steel_TMT_Price_Rs_per_t
 LOW_CARD_CATS = [
     "Furnishing", "Facing", "Ownership", "Overlooking", "Age_Group",
     "Construction_Status", "rera_project_status", "rera_project_type",
+    "district_from_geo",
 ]
 
 # Deterministic functions of the target -- kept for reference, excluded from features.
@@ -82,6 +84,10 @@ def clean_and_engineer(merged: pd.DataFrame) -> pd.DataFrame:
     df["PricePerSqft"] = df["Price_INR"] / df["Area_Sqft"]
     df = winsorize_by_group(df, ["PricePerSqft"], "deal_type")
 
+    # Polygon-derived geography: district, candidate pincodes, and a cross-check
+    # on the imputed pincode. Polygons don't fill Pincode -- see geo.py.
+    df = attach_geo_columns(df)
+
     df["log_price"] = np.log1p(df["Price_INR"])
     df["floor_ratio"] = (df["Floor_Number"] / df["Total_Floors"].replace(0, np.nan)).fillna(0).clip(0, 1)
     df["has_rera_match"] = df["rera_project_name"].notna().astype(int)
@@ -94,7 +100,8 @@ def clean_and_engineer(merged: pd.DataFrame) -> pd.DataFrame:
 
 def build_feature_matrix(cleaned: pd.DataFrame) -> pd.DataFrame:
     """One-hot encoded and leakage-free. Price_INR/log_price remain as targets."""
-    df = cleaned.drop(columns=[c for c in LEAKAGE_COLS + ["URL"] if c in cleaned.columns])
+    df = cleaned.drop(columns=[c for c in LEAKAGE_COLS + ["URL", "Possible_Pincodes"]
+                                if c in cleaned.columns])
     # Pincode stays a string like Locality/Society: ~180 categories, target-encode at train time.
     one_hot = [c for c in LOW_CARD_CATS + ["deal_type", "Pincode_impute_source"] if c in df.columns]
     return pd.get_dummies(df, columns=one_hot, prefix=one_hot)
