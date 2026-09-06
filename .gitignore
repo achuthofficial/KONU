@@ -1,0 +1,10 @@
+# Scraper output (see tsrera/README.md)
+/tsrera/data/
+
+# Datasets and pipeline outputs -- large, not tracked
+/data/raw/
+/data/processed/
+/data/reports/
+
+__pycache__/
+.ipynb_checkpoints/
