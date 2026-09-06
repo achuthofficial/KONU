@@ -67,3 +67,22 @@ def winsorize(df: pd.DataFrame, cols: list[str], lo_q=0.01, hi_q=0.99) -> pd.Dat
         lo, hi = df[col].quantile([lo_q, hi_q])
         df[col] = df[col].clip(lo, hi)
     return df
+
+
+def winsorize_by_group(df: pd.DataFrame, cols: list[str], group_col: str,
+                        lo_q=0.01, hi_q=0.99) -> pd.DataFrame:
+    """Winsorize within each group separately.
+
+    Required for any price column on this dataset: sale prices, monthly rents
+    and lease deposits are three different orders of magnitude sharing one
+    Price_INR column. Winsorizing them together puts the 1st-percentile floor
+    (~Rs 27,000, set by the sale-dominated majority) *above* the median
+    monthly rent, so a global clip silently inflates roughly half of all rent
+    rows up to that floor instead of leaving them alone.
+    """
+    df = df.copy()
+    for col in cols:
+        lo = df.groupby(group_col)[col].transform(lambda s: s.quantile(lo_q))
+        hi = df.groupby(group_col)[col].transform(lambda s: s.quantile(hi_q))
+        df[col] = df[col].clip(lo, hi)
+    return df
