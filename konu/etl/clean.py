@@ -1,12 +1,4 @@
-"""Cleaning primitives used by the transform stage.
-
-normalize_category folds spelling/casing/whitespace variants of the same
-category together (e.g. "Ready to Move" / "Ready to move" / "Ready to move
-Property" all become one value) before top-N collapsing runs -- otherwise
-the variants split a category's count across several labels and a genuinely
-common value can miss the top-N cut, and the one-hot columns downstream
-carry duplicate categories.
-"""
+"""Cleaning primitives: category normalization, deal-type parsing, outlier capping."""
 from __future__ import annotations
 
 import re
@@ -17,29 +9,26 @@ _TRAILING_NOISE = re.compile(r"\s*(property|properties)\s*$", re.IGNORECASE)
 
 
 def normalize_category(value) -> str | None:
+    """Fold casing/spacing/suffix variants together ("Ready to move Property" -> "Ready To Move")."""
     if pd.isna(value):
         return None
-    s = str(value).strip()
-    s = _TRAILING_NOISE.sub("", s).strip()
+    s = _TRAILING_NOISE.sub("", str(value).strip()).strip()
     s = re.sub(r"[\s\-]+", " ", s)
     return s.title() if s else None
 
 
 def collapse_to_top_n(series: pd.Series, n: int = 10, other_label: str = "Other") -> pd.Series:
+    """Keep the n most common categories, fold the rest into "Other"."""
+    # Normalize first, or spelling variants split one category's count across several labels.
     normalized = series.map(normalize_category)
     top = normalized.value_counts().head(n).index
     return normalized.where(normalized.isin(top), other_label)
 
 
 def derive_deal_type(url: pd.Series) -> pd.Series:
-    """Sale / Rent / Lease / Unknown from the URL slug.
-
-    Lease is split out from Rent on purpose: "for-lease" listings carry a
-    long-term lease *deposit* (lakhs, comparable in magnitude to a sale
-    price), not a monthly rent -- folding them into Rent wrecks any average
-    rent figure with deposit-sized outliers.
-    """
+    """Sale / Rent / Lease / Unknown from the URL slug (the Transaction column isn't a clean label)."""
     u = url.astype(str).str.lower()
+    # Lease is separate from Rent: a lease price is a deposit in lakhs, not a monthly rent.
     is_lease = u.str.contains("for-lease", regex=True)
     is_rent = u.str.contains("for-rent|-rent-", regex=True) & ~is_lease
     is_sale = u.str.contains("for-sale|resale|-sale-", regex=True) & ~is_rent & ~is_lease
@@ -48,11 +37,7 @@ def derive_deal_type(url: pd.Series) -> pd.Series:
 
 
 def filter_percentile_outliers(df: pd.DataFrame, cols: list[str], lo_q=0.01, hi_q=0.99) -> pd.DataFrame:
-    """Drops rows outside [lo_q, hi_q] on any of `cols`. Row-count-destructive --
-    only appropriate when the caller has row-count headroom to spend (e.g. an
-    already-narrowed, sale-only subset). For a general-purpose cleaned dataset
-    with a data-loss budget, use winsorize() instead.
-    """
+    """Drop rows outside the percentile band. Row-destructive -- prefer winsorize under a loss budget."""
     mask = pd.Series(True, index=df.index)
     for col in cols:
         lo, hi = df[col].quantile([lo_q, hi_q])
@@ -61,7 +46,7 @@ def filter_percentile_outliers(df: pd.DataFrame, cols: list[str], lo_q=0.01, hi_
 
 
 def winsorize(df: pd.DataFrame, cols: list[str], lo_q=0.01, hi_q=0.99) -> pd.DataFrame:
-    """Caps (does not drop) values in `cols` to their [lo_q, hi_q] percentile bounds."""
+    """Cap values to the percentile band, keeping every row."""
     df = df.copy()
     for col in cols:
         lo, hi = df[col].quantile([lo_q, hi_q])
@@ -71,14 +56,11 @@ def winsorize(df: pd.DataFrame, cols: list[str], lo_q=0.01, hi_q=0.99) -> pd.Dat
 
 def winsorize_by_group(df: pd.DataFrame, cols: list[str], group_col: str,
                         lo_q=0.01, hi_q=0.99) -> pd.DataFrame:
-    """Winsorize within each group separately.
+    """Cap within each group separately.
 
-    Required for any price column on this dataset: sale prices, monthly rents
-    and lease deposits are three different orders of magnitude sharing one
-    Price_INR column. Winsorizing them together puts the 1st-percentile floor
-    (~Rs 27,000, set by the sale-dominated majority) *above* the median
-    monthly rent, so a global clip silently inflates roughly half of all rent
-    rows up to that floor instead of leaving them alone.
+    Required for prices: sale, rent and lease share one Price_INR column three orders of
+    magnitude apart, so a global 1st-percentile floor (~Rs 27,000) sits above the median
+    rent and would inflate ~46% of rent rows up to it.
     """
     df = df.copy()
     for col in cols:

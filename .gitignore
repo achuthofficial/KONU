@@ -1,8 +1,10 @@
 # Scraper output (see tsrera/README.md)
 /tsrera/data/
 
-# Downloaded/converted datasets for analysis -- large, sourced from Drive, not tracked
-/tsrera/data_analysis/raw/
+# Datasets and pipeline outputs -- large, not tracked
+/data/raw/
+/data/processed/
+/data/reports/
 
 __pycache__/
 .ipynb_checkpoints/

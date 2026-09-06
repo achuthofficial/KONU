@@ -1,20 +1,19 @@
 """ETL entrypoint: extract -> transform -> load.
 
-    python3 -m pipeline.etl.run_etl
+    python3 -m konu.etl.run_etl
 
 Writes:
-    tsrera/data_analysis/raw/model_cleaned_listings.csv   -- cleaned, engineered,
+    data/processed/model_cleaned_listings.csv   -- cleaned, engineered,
         leakage columns (Price_Cr, PricePerSqft) kept as reference only.
-    tsrera/data_analysis/raw/model_ready_listings.csv     -- one-hot encoded
+    data/processed/model_ready_listings.csv     -- one-hot encoded
         feature matrix, leakage-free, ready for a model.
-    tsrera/data_analysis/raw/KONU_Real_Estate_Analysis.xlsx -- the Excel report.
+    data/processed/KONU_Real_Estate_Analysis.xlsx -- the Excel report.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 
+from ..paths import PROCESSED, REPORTS
 from .extract import load_listings, load_rera
 from .load import save_csv, write_report_workbook
 from .report import (correlation_with_target, imputation_summary, missingness_table,
@@ -95,7 +94,6 @@ METHODOLOGY = [
                          "matrix, kept only as reference columns on the cleaned table."),
 ]
 
-RAW = Path(__file__).resolve().parents[2] / "tsrera" / "data_analysis" / "raw"
 
 NUMERIC_FOR_CORR = [
     "Price_INR", "log_price", "BHK", "Area_Sqft", "Bathrooms", "Balconies",
@@ -166,12 +164,12 @@ def main():
     print(f"rental subset (Rent+Lease): {len(rental):,} rows")
 
     print("load...")
-    save_csv(cleaned, RAW / "model_cleaned_listings.csv")
-    save_csv(features, RAW / "model_ready_listings.csv")
-    save_csv(rental, RAW / "rental_listings.csv")
-    save_csv(cleaned[cleaned["deal_type"] == "Sale"], RAW / "sale_listings.csv")
-    write_report_workbook(RAW / "KONU_Real_Estate_Analysis.xlsx", sheets, overview_stats)
-    print("done ->", RAW / "KONU_Real_Estate_Analysis.xlsx")
+    save_csv(cleaned, PROCESSED / "model_cleaned_listings.csv")
+    save_csv(features, PROCESSED / "model_ready_listings.csv")
+    save_csv(rental, PROCESSED / "rental_listings.csv")
+    save_csv(cleaned[cleaned["deal_type"] == "Sale"], PROCESSED / "sale_listings.csv")
+    write_report_workbook(REPORTS / "KONU_Real_Estate_Analysis.xlsx", sheets, overview_stats)
+    print("done ->", REPORTS / "KONU_Real_Estate_Analysis.xlsx")
 
 
 if __name__ == "__main__":

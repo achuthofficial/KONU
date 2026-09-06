@@ -1,8 +1,7 @@
 """Probabilistic entity resolution: property listings <-> RERA projects.
 
-Shared by the one-off Drive-dataset merge (merge_datasets.py) and the
-scheduled pipeline (pipeline/merge_job.py) -- the matching logic is the
-same regardless of where the two input CSVs came from.
+Shared by the ETL pipeline (konu/etl) and the notebooks -- the matching
+logic is the same regardless of where the two input CSVs came from.
 
 There is no shared ID between the two sources, so this links them on
 (pincode block +) fuzzy name match between listing `Society` and RERA
@@ -18,7 +17,7 @@ There is no shared ID between the two sources, so this links them on
 Locality strings are deliberately NOT used as a blocking key: listings use
 common neighbourhood names ("Madhapur"), RERA addresses use formal
 village/mandal names ("MAVALA MERGED VILLAGE IN ADILABAD MUNICIPALITY") --
-see tsrera/data_analysis/output/eda_*.json for the numbers behind this.
+see notebooks/01_eda.ipynb for the numbers behind this.
 
 Every matched row carries match_score/match_method rather than presenting
 fuzzy links as certain -- filter by those columns for higher precision.
