@@ -1,0 +1,5 @@
+pandas
+numpy
+shapely>=2.0
+requests
+beautifulsoup4
