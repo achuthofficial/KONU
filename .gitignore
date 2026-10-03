@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+data/interim/state/
+data/interim/.pipeline.lock
+logs/
+tsrera/data/
+.claude/settings.local.json
