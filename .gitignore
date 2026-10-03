@@ -1,10 +1,16 @@
 # Scraper output (see tsrera/README.md)
 /tsrera/data/
 
-# Datasets and pipeline outputs -- large, not tracked
-/data/raw/
+# Datasets and pipeline outputs: large or regenerable, not tracked
+/data/raw/*
+!/data/raw/legacy_listings.csv
 /data/processed/
 /data/reports/
+/data/interim/state/
+/data/interim/.pipeline.lock
+/logs/
 
 __pycache__/
+*.pyc
 .ipynb_checkpoints/
+.claude/settings.local.json

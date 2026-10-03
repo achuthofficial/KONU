@@ -19,7 +19,11 @@ NUMERIC_COLS = [
 
 
 def load_listings(path: Path | None = None) -> pd.DataFrame:
-    df = pd.read_csv(path or RAW / "All_Merged_Updated.csv", low_memory=False)
+    if path is None:
+        path = RAW / "All_Merged_Updated.csv"
+        if not path.exists():  # the tracked archive holds the same listings
+            path = RAW / "legacy_listings.csv"
+    df = pd.read_csv(path, low_memory=False)
     df.columns = [c.strip().lstrip("﻿") for c in df.columns]  # strip BOM from first header
     for col in NUMERIC_COLS:
         if col in df.columns:
