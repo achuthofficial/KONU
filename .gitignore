@@ -1,5 +1,7 @@
 __pycache__/
 *.pyc
-data/interim/.crawl_state.json
+data/interim/state/
+data/interim/.pipeline.lock
+logs/
 tsrera/data/
 .claude/settings.local.json

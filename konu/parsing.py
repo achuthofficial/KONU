@@ -20,12 +20,13 @@ def money(s):
     """'1.5 Cr' / '68 Lac' / '2.00 L' / '₹ 5,000' -> rupees (float) or None."""
     if not s:
         return None
-    m = re.search(r"([\d,]+(?:\.\d+)?)\s*(Cr|Crore|Lac|Lakh|L|K)?\b", s.replace("₹", " "), re.I)
+    m = re.search(r"([\d,]+(?:\.\d+)?)\s*(Crores?|Cr|Lacs?|Lakhs?|L|K)?\b", s.replace("₹", " "), re.I)
     if not m:
         return None
     value = float(m.group(1).replace(",", ""))
     unit = (m.group(2) or "").lower()
-    multiplier = {"cr": 1e7, "crore": 1e7, "lac": 1e5, "lakh": 1e5, "l": 1e5, "k": 1e3}.get(unit, 1)
+    multiplier = {"cr": 1e7, "crore": 1e7, "crores": 1e7, "lac": 1e5, "lacs": 1e5, "lakh": 1e5, "lakhs": 1e5,
+                  "l": 1e5, "k": 1e3}.get(unit, 1)
     return value * multiplier
 
 

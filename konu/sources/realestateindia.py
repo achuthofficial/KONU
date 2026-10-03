@@ -14,7 +14,7 @@ KEYS = ["Listing Type", "Building Type", "Property Type", "City", "Locality", "P
 AREA_UNIT = r"[\d.,]+\s*(Sq\.?\s?(?:ft|Yards|Meter)\.?|Acre|Cent|Guntha|Ares|Hectares)"
 
 
-def urls(fetcher, include_rent=False):
+def urls(fetcher, include_rent=False, **_):
     kinds = ("property-detail-buy",) + (("property-detail-rent",) if include_rent else ())
     for sitemap in re.findall(r"<loc>([^<]+)</loc>", fetcher.get(SITEMAP_INDEX) or ""):
         if not any(k in sitemap for k in kinds):

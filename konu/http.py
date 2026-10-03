@@ -51,6 +51,8 @@ class Fetcher:
                 time.sleep(2 ** attempt)
                 continue
             if resp.status_code == 200:
+                if not resp.encoding or resp.encoding.lower() == "iso-8859-1":
+                    resp.encoding = "utf-8"  # servers omit the charset; requests would guess Latin-1
                 if url.endswith(".gz"):
                     try:
                         return gzip.decompress(resp.content).decode("utf-8", "ignore")
