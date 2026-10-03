@@ -6,7 +6,7 @@ LEGACY_CSV = ROOT / "data" / "raw" / "legacy_listings.csv"
 CRAWLED_CSV = ROOT / "data" / "interim" / "crawled_listings.csv"
 STATE_DIR = ROOT / "data" / "interim" / "state"
 LOG_DIR = ROOT / "logs"
-GEOJSON_FILES = [ROOT / "data" / "geo" / "telangana.geojson", ROOT / "data" / "geo" / "andhra-pradesh.geojson"]
+GEOJSON_FILES = [ROOT / "data" / "reference" / "telangana.geojson", ROOT / "data" / "reference" / "andhra-pradesh.geojson"]
 FINAL_CSV = ROOT / "data" / "output" / "properties_all_sources.csv"
 
 COLUMNS = [
